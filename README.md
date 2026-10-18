@@ -37,7 +37,7 @@ labels:
 | Option | Default | Description |
 | --- | --- | --- |
 | `title` | `Frigate events` | Card title. |
-| `frigate_instance_id` | auto | Config entry ID of the Frigate integration. Auto-detected for admin users when omitted; set it for non-admins or multiple Frigate instances. |
+| `frigate_client_id` | auto | The `mqtt: client_id` from your Frigate config (Frigate's default is `frigate`). Detected automatically via the integration's media source; set it if detection fails or you run several Frigate instances. |
 | `cameras` | all | Cameras shown by default. Strings (Frigate camera names) or `{camera, name}` objects for a display name. Empty means all cameras. |
 | `days` | `3` | How many days back to load. The card also has a day selector. |
 | `limit` | `200` | Maximum number of events loaded. |

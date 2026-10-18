@@ -9,7 +9,7 @@
  * resource  /local/frigate-card.js  (type: JavaScript module).
  */
 
-const CARD_VERSION = "0.1.0";
+const CARD_VERSION = "0.1.1";
 
 const LABEL_ICONS = {
   person: "mdi:account",
@@ -228,7 +228,7 @@ class FrigateCard extends HTMLElement {
     for (const c of this._cams) this._known.set(c.id, c.name);
     this._selectedCams = new Set(this._cams.map((c) => c.id));
     this._days = null;
-    this._instance = this._config.frigate_instance_id || null;
+    this._instance = this._config.frigate_client_id || this._config.frigate_instance_id || null;
     this._loaded = false;
     this._render();
     if (this._hass) this._load();
@@ -266,14 +266,31 @@ class FrigateCard extends HTMLElement {
     return this._days ?? this._config.days;
   }
 
+  /*
+   * The integration identifies an instance by the MQTT client_id from the
+   * Frigate config (not the HA config entry id). Its media source lists one
+   * root child per instance, so read the id from there.
+   */
   async _resolveInstance() {
     if (this._instance) return this._instance;
-    const entries = await this._hass.callWS({ type: "config_entries/get", domain: "frigate" });
-    if (!entries?.length) {
-      throw new Error("No Frigate integration found. Set frigate_instance_id.");
+    try {
+      const root = await this._hass.callWS({
+        type: "media_source/browse_media",
+        media_content_id: "media-source://frigate",
+      });
+      for (const ch of root?.children || []) {
+        const m = /^media-source:\/\/frigate\/([^/]+)/.exec(ch.media_content_id || "");
+        if (m) {
+          this._instance = m[1];
+          return this._instance;
+        }
+      }
+    } catch (_) {
+      /* fall through */
     }
-    this._instance = entries[0].entry_id;
-    return this._instance;
+    throw new Error(
+      "Could not detect the Frigate client ID. Set frigate_client_id to the mqtt client_id from your Frigate config (default: frigate)."
+    );
   }
 
   async _load(silent = false) {
@@ -583,7 +600,7 @@ class FrigateCardEditor extends HTMLElement {
   _fields() {
     return [
       ["title", "Title", "text"],
-      ["frigate_instance_id", "Frigate instance ID (config entry ID, blank = auto-detect)", "text"],
+      ["frigate_client_id", "Frigate client ID (mqtt client_id from the Frigate config, blank = auto-detect)", "text"],
       ["cameras", "Default cameras (comma separated Frigate camera names, blank = all)", "list"],
       ["days", "Days to show", "number"],
       ["limit", "Max events", "number"],
