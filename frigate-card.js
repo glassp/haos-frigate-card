@@ -9,7 +9,7 @@
  * resource  /local/frigate-card.js  (type: JavaScript module).
  */
 
-const CARD_VERSION = "0.2.0";
+const CARD_VERSION = "0.2.1";
 
 const LABEL_ICONS = {
   person: "mdi:account",
@@ -572,7 +572,9 @@ class FrigateCard extends HTMLElement {
       v.playsInline = true;
       v.preload = "auto";
       v.addEventListener("error", () => {
-        media.innerHTML = `<div class="msg">Could not play video (media error ${v.error?.code ?? "?"}). <a href="${esc(url)}" target="_blank" style="color:#9cf">Open clip</a></div>`;
+        const can = (t) => (v.canPlayType(t) ? "yes" : "no");
+        media.innerHTML = `<div class="msg">Could not play video (media error ${v.error?.code ?? "?"}).<br>
+          <small>This device decodes H.264: ${can('video/mp4; codecs="avc1.640029"')}, H.265/HEVC: ${can('video/mp4; codecs="hvc1.1.6.L93.B0"')}</small></div>`;
       });
       v.src = url;
       media.innerHTML = "";
