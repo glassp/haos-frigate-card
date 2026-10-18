@@ -12,7 +12,11 @@ Manual:
 2. Add a dashboard resource: URL `/local/frigate-card.js`, type **JavaScript module**.
 3. Reload the browser.
 
-HACS: add this repository as a custom repository of type **Dashboard**.
+HACS: open HACS, three-dot menu, **Custom repositories**, add `https://github.com/glassp/haos-frigate-card` with type **Dashboard**, then download **Frigate Card**. Or use this button:
+
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=glassp&repository=haos-frigate-card&category=plugin)
+
+HACS adds the dashboard resource automatically.
 
 ## Configuration
 
