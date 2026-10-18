@@ -9,7 +9,7 @@
  * resource  /local/frigate-card.js  (type: JavaScript module).
  */
 
-const CARD_VERSION = "0.2.1";
+const CARD_VERSION = "0.3.0";
 
 const LABEL_ICONS = {
   person: "mdi:account",
@@ -36,6 +36,8 @@ const DEFAULTS = {
   has_clip: true,
   group_by_day: true,
   show_thumbnails: true,
+  show_player: true,
+  note: "",
   show_filters: true,
   show_camera_filter: true,
   show_day_selector: true,
@@ -118,6 +120,14 @@ const STYLE = `
     border-radius: 8px; padding: 4px 8px; font: inherit; font-size: 0.85em;
     cursor: pointer;
   }
+  .note {
+    margin: 4px 16px 8px; padding: 8px 12px; border-radius: 8px; font-size: 0.9em;
+    background: var(--secondary-background-color); color: var(--secondary-text-color);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .note ha-icon { --mdc-icon-size: 18px; flex: 0 0 auto; }
+  .event.static { cursor: default; }
+  .event.static:hover { background: none; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 16px 8px; }
   .chip {
     border: 1px solid var(--divider-color); border-radius: 16px;
@@ -405,6 +415,7 @@ class FrigateCard extends HTMLElement {
           ${c.show_filters && c.show_day_selector ? `<select id="days" aria-label="Time range">${daysOpts}</select>` : ""}
           <button id="refresh" title="Refresh" aria-label="Refresh"><ha-icon icon="mdi:refresh"></ha-icon></button>
         </div>
+        ${c.note ? `<div class="note"><ha-icon icon="mdi:information-outline"></ha-icon><span>${esc(c.note)}</span></div>` : ""}
         ${chips}
         <div class="list" ${maxH}>${body}</div>
       </ha-card>
@@ -435,7 +446,7 @@ class FrigateCard extends HTMLElement {
          </div>`
       : "";
     return `
-      <button class="event" data-id="${esc(e.id)}">
+      <button class="event ${c.show_player ? "" : "static"}" data-id="${esc(e.id)}" ${c.show_player ? "" : "tabindex=\"-1\""}>
         ${thumb}
         <div class="info">
           <div class="what"><ha-icon icon="${icon}"></ha-icon><span>${esc(what)}</span></div>
@@ -460,7 +471,7 @@ class FrigateCard extends HTMLElement {
         this._render();
       })
     );
-    root.querySelectorAll(".event").forEach((el) =>
+    if (this._config.show_player) root.querySelectorAll(".event").forEach((el) =>
       el.addEventListener("click", () => {
         const ev = this._events.find((x) => x.id === el.dataset.id);
         if (ev) this._openPlayer(ev);
@@ -610,6 +621,8 @@ class FrigateCardEditor extends HTMLElement {
       ["max_height", "Max list height in px (0 = unlimited)", "number"],
       ["has_clip", "Only events with a clip", "bool"],
       ["group_by_day", "Group by day", "bool"],
+      ["show_player", "Open clips in a player when an event is selected", "bool"],
+      ["note", "Note shown under the title (e.g. why playback is off)", "text"],
       ["show_thumbnails", "Show thumbnails", "bool"],
       ["show_filters", "Show filters (master switch)", "bool"],
       ["show_camera_filter", "Show camera switcher chips", "bool"],

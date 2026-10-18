@@ -45,6 +45,8 @@ labels:
 | `zones` | all | Only events in these zones. |
 | `has_clip` | `true` | Only events that have a recorded clip. |
 | `group_by_day` | `true` | Day headers in the list. |
+| `show_player` | `true` | `false` turns the card into a plain event list: selecting an event does nothing. |
+| `note` | none | Text shown in a note box under the title, e.g. `Video Wiedergabe ist auf diesem Gerät blockiert`. |
 | `show_thumbnails` | `true` | Show event thumbnails. |
 | `show_filters` | `true` | Master switch: `false` hides both the camera switcher and day selector. |
 | `show_camera_filter` | `true` | Camera switcher chips. They toggle cameras at runtime (not saved). |
