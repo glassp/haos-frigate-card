@@ -53,7 +53,7 @@ labels:
 | `refresh_seconds` | `60` | Auto refresh interval, `0` disables it. |
 | `max_height` | `0` | Max list height in px, `0` for unlimited. |
 
-The player supports Esc to close and the left/right arrow keys to step to newer/older events. Clips are played via the integration's HLS (`vod`) endpoint using Home Assistant's `ha-hls-player`, or natively in Safari.
+The player supports Esc to close and the left/right arrow keys to step to newer/older events. Clips are played via the integration's HLS (`vod`) endpoint using Home Assistant's `ha-hls-player` when available, otherwise hls.js (loaded from jsDelivr on first use), and natively only as a last resort (e.g. iOS). Playback starts muted so kiosk browsers allow autoplay.
 
 ## License
 
