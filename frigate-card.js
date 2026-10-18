@@ -9,7 +9,7 @@
  * resource  /local/frigate-card.js  (type: JavaScript module).
  */
 
-const CARD_VERSION = "0.1.1";
+const CARD_VERSION = "0.1.2";
 
 const LABEL_ICONS = {
   person: "mdi:account",
@@ -37,6 +37,8 @@ const DEFAULTS = {
   group_by_day: true,
   show_thumbnails: true,
   show_filters: true,
+  show_camera_filter: true,
+  show_day_selector: true,
   show_zones: true,
   show_score: true,
   refresh_seconds: 60,
@@ -376,7 +378,7 @@ class FrigateCard extends HTMLElement {
 
     const camIds = [...this._known.keys()];
     const chips =
-      c.show_filters && camIds.length > 1
+      c.show_filters && c.show_camera_filter && camIds.length > 1
         ? `<div class="chips">${camIds
             .map(
               (id) =>
@@ -399,7 +401,7 @@ class FrigateCard extends HTMLElement {
       <ha-card>
         <div class="header">
           <div class="title">${esc(c.title ?? "Frigate events")}</div>
-          ${c.show_filters ? `<select id="days" aria-label="Time range">${daysOpts}</select>` : ""}
+          ${c.show_filters && c.show_day_selector ? `<select id="days" aria-label="Time range">${daysOpts}</select>` : ""}
           <button id="refresh" title="Refresh" aria-label="Refresh"><ha-icon icon="mdi:refresh"></ha-icon></button>
         </div>
         ${chips}
@@ -611,7 +613,9 @@ class FrigateCardEditor extends HTMLElement {
       ["has_clip", "Only events with a clip", "bool"],
       ["group_by_day", "Group by day", "bool"],
       ["show_thumbnails", "Show thumbnails", "bool"],
-      ["show_filters", "Show camera/day filters", "bool"],
+      ["show_filters", "Show filters (master switch)", "bool"],
+      ["show_camera_filter", "Show camera switcher chips", "bool"],
+      ["show_day_selector", "Show day range selector", "bool"],
       ["show_zones", "Show zones", "bool"],
       ["show_score", "Show score", "bool"],
     ];

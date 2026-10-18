@@ -46,7 +46,9 @@ labels:
 | `has_clip` | `true` | Only events that have a recorded clip. |
 | `group_by_day` | `true` | Day headers in the list. |
 | `show_thumbnails` | `true` | Show event thumbnails. |
-| `show_filters` | `true` | Camera chips and day selector. Chips toggle cameras at runtime (not saved). |
+| `show_filters` | `true` | Master switch: `false` hides both the camera switcher and day selector. |
+| `show_camera_filter` | `true` | Camera switcher chips. They toggle cameras at runtime (not saved). |
+| `show_day_selector` | `true` | Day range dropdown. |
 | `show_zones` / `show_score` | `true` | Show zones and top score in the row. |
 | `refresh_seconds` | `60` | Auto refresh interval, `0` disables it. |
 | `max_height` | `0` | Max list height in px, `0` for unlimited. |
