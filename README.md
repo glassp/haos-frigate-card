@@ -51,9 +51,10 @@ labels:
 | `show_day_selector` | `true` | Day range dropdown. |
 | `show_zones` / `show_score` | `true` | Show zones and top score in the row. |
 | `refresh_seconds` | `60` | Auto refresh interval, `0` disables it. |
+| `clip_padding_seconds` | `5` | Seconds added before and after the event when fetching the clip. |
 | `max_height` | `0` | Max list height in px, `0` for unlimited. |
 
-The player supports Esc to close and the left/right arrow keys to step to newer/older events. Clips are played via the integration's HLS (`vod`) endpoint using Home Assistant's `ha-hls-player` when available, otherwise hls.js (loaded from jsDelivr on first use), and natively only as a last resort (e.g. iOS). Playback starts muted so kiosk browsers allow autoplay.
+The player supports Esc to close and the left/right arrow keys to step to newer/older events. Clips are plain MP4 files, fetched through the integration's recording endpoint for the event's time range (plus `clip_padding_seconds`) and played in a normal `<video>` element, so no HLS support is needed. Playback starts muted so kiosk browsers allow autoplay.
 
 ## License
 

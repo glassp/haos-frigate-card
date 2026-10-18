@@ -9,9 +9,7 @@
  * resource  /local/frigate-card.js  (type: JavaScript module).
  */
 
-const CARD_VERSION = "0.1.3";
-
-const HLS_JS_URL = "https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js";
+const CARD_VERSION = "0.2.0";
 
 const LABEL_ICONS = {
   person: "mdi:account",
@@ -45,6 +43,7 @@ const DEFAULTS = {
   show_score: true,
   refresh_seconds: 60,
   max_height: 0,
+  clip_padding_seconds: 5,
 };
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -525,15 +524,11 @@ class FrigateCard extends HTMLElement {
   }
 
   _openPlayer(e) {
-    this._hls?.destroy();
-    this._hls = null;
     this._current = e;
     this._render();
   }
 
   _closePlayer() {
-    this._hls?.destroy();
-    this._hls = null;
     this._current = null;
     this._player = null;
     this._render();
@@ -544,76 +539,6 @@ class FrigateCard extends HTMLElement {
     const i = list.findIndex((x) => x.id === this._current?.id);
     const next = list[i + dir];
     if (next) this._openPlayer(next);
-  }
-
-  /*
-   * Prefer MSE playback (HA's ha-hls-player, else hls.js) over native HLS:
-   * native HLS in Android WebViews is unreliable. Native is the last resort
-   * (iOS Safari without MSE).
-   */
-  async _mountPlayer(media, url, e) {
-    const fail = (msg) => {
-      if (this._current === e) media.innerHTML = `<div class="msg">Could not play video: ${esc(msg)}</div>`;
-    };
-    const video = () => {
-      const v = document.createElement("video");
-      v.controls = true;
-      v.autoplay = true;
-      v.muted = true; // required for autoplay on most kiosk browsers
-      v.playsInline = true;
-      return v;
-    };
-
-    if (customElements.get("ha-hls-player")) {
-      const p = document.createElement("ha-hls-player");
-      p.hass = this._hass;
-      p.url = url;
-      p.controls = true;
-      p.autoPlay = true;
-      p.muted = true;
-      p.playsInline = true;
-      this._player = p;
-      media.appendChild(p);
-      return;
-    }
-
-    let Hls = window.Hls;
-    if (!Hls) {
-      try {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement("script");
-          s.src = HLS_JS_URL;
-          s.onload = resolve;
-          s.onerror = () => reject(new Error("could not load hls.js"));
-          document.head.appendChild(s);
-        });
-        Hls = window.Hls;
-      } catch (_) {
-        /* try native below */
-      }
-    }
-    if (this._current !== e) return;
-
-    const v = video();
-    if (Hls?.isSupported?.()) {
-      const hls = new Hls();
-      this._hls = hls;
-      hls.on(Hls.Events.ERROR, (_ev, d) => {
-        if (d.fatal) fail(`${d.type}: ${d.details}`);
-      });
-      hls.loadSource(url);
-      hls.attachMedia(v);
-      media.appendChild(v);
-      v.play().catch(() => {});
-      return;
-    }
-    if (v.canPlayType("application/vnd.apple.mpegurl")) {
-      v.src = url;
-      v.addEventListener("error", () => fail(`media error ${v.error?.code ?? ""}`));
-      media.appendChild(v);
-      return;
-    }
-    fail("this browser can neither play HLS natively nor load hls.js");
   }
 
   async _wirePlayer() {
@@ -635,10 +560,23 @@ class FrigateCard extends HTMLElement {
         media.innerHTML = `<img alt="Snapshot" src="${esc(url)}">`;
         return;
       }
-      const url = await this._sign(`/api/frigate/${instance}/vod/event/${e.id}/index.m3u8`);
+      const pad = Number(this._config.clip_padding_seconds ?? 5);
+      const start = Math.floor(e.start_time - pad);
+      const end = Math.ceil((e.end_time || Date.now() / 1000) + pad);
+      const url = await this._sign(`/api/frigate/${instance}/recording/${e.camera}/start/${start}/end/${end}`);
       if (this._current !== e) return;
+      const v = document.createElement("video");
+      v.controls = true;
+      v.autoplay = true;
+      v.muted = true; // kiosk browsers block autoplay with sound
+      v.playsInline = true;
+      v.preload = "auto";
+      v.addEventListener("error", () => {
+        media.innerHTML = `<div class="msg">Could not play video (media error ${v.error?.code ?? "?"}). <a href="${esc(url)}" target="_blank" style="color:#9cf">Open clip</a></div>`;
+      });
+      v.src = url;
       media.innerHTML = "";
-      await this._mountPlayer(media, url, e);
+      media.appendChild(v);
     } catch (err) {
       media.innerHTML = `<div class="msg">Could not load video: ${esc(err?.message || err?.code || "unknown error")}</div>`;
     }
